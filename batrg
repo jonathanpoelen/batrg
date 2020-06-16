@@ -288,8 +288,21 @@ if [ $#file_separator -eq 1 ]; then
 fi
 
 if [ $style -eq 0 ] && [ -z $BAT_STYLE ]; then
-  if [ $snip -eq 2 ] && [ $ctx_after -eq 0 ] && [ $ctx_before -eq 0 ]; then
-    snip=0
+  if [ $snip -eq 2 ]; then
+    if [ $ctx_after -eq 0 ] && [ $ctx_before -eq 0 ]; then
+      snip=0
+    else
+      # --style=snip since bat-0.12
+      bat_version=$($=bat_engine --version)
+      setopt extendedglob
+      if [[ $bat_version = 'bat '(#b)(<0-9>##).(<0-9>##)* ]] &&
+        [ ${bat_version[$mbegin[1],$mend[1]]} = 0 ] &&
+        [ ${bat_version[$mbegin[2],$mend[2]]} -lt 12 ] ;
+      then
+        snip=0
+      fi
+      setopt noextendedglob
+    fi
   fi
 
   if [ $snip -eq 0 ]; then
