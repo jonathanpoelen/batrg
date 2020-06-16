@@ -68,4 +68,4 @@ Another options are passed directly to `ripgrep` or `bat`.
 
 ## Installation
 
-Just put batrg in a `PATH` folder.
+Just put `batrg` in a `PATH` folder and `completion/_batrg` in a completion folder.
