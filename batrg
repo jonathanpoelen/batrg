@@ -1,0 +1,479 @@
+#!/usr/bin/env zsh
+
+zmodload zsh/zutil
+
+# xxx_args:
+# --name value -> (--name value)
+# --namevalue -> (--name value)
+# xxx_args2:
+# --name=value -> (--name= value)
+zparseopts -E -D \
+  A:=batrg_args -after-context:=batrg_args -after-context\\=:=batrg_args2 \
+  B:=batrg_args -before-context:=batrg_args -before-context\\=:=batrg_args2 \
+  C:=batrg_args -context:=batrg_args -context\\=:=batrg_args2 \
+  -bat-engine:=batrg_args -bat-engine\\=:=batrg_args2 \
+  -rg-engine:=batrg_args -rg-engine\\=:=batrg_args2 \
+  -paging:=batrg_args -paging\\=:=batrg_args2 \
+  -pager:=batrg_args -pager\\=:=batrg_args2 \
+  -terminal-width:=batrg_args -terminal-width\\=:=batrg_args2 \
+  -snip=batrg_args -no-snip=batrg_args \
+  -highlight=batrg_args -no-highlight=batrg_args \
+  h=batrg_args -help=batrg_args \
+  f:=batrg_args -file:=batrg_args -file\\=:=batrg_args2 \
+  e:=batrg_args -regexp:=batrg_args -regexp\\=:=batrg_args2 \
+  -file-separator:=batrg_args -file-separator\\=:=batrg_args2 \
+  -file-separator-wrap=batrg_args \
+  -no-file-separator-wrap=batrg_args \
+  -style:=batrg_args -style\\=:=batrg_args2 \
+  -color:=batrg_args -color\\=:=batrg_args2 \
+  p=batrg_args -plain=batrg_args \
+  n=batrg_args -number=batrg_args \
+  \
+  -tabs:=bat_args -tabs\\=:=bat_args2 \
+  -wrap:=bat_args -wrap\\=:=bat_args2 \
+  -italic-text:=bat_args -italic-text\\=:=bat_args2 \
+  -decorations:=bat_args -decorations\\=:=bat_args2 \
+  -theme:=bat_args -theme\\=:=bat_args2 \
+  -file-name:=bat_args -file-name\\=:=bat_args2 \
+  -map-syntax:=bat_args -map-syntax\\=:=bat_args2 \
+  H:=bat_args -highlight-line:=bat_args -highlight-line\\=:=bat_args2 \
+  r:=bat_args -line-range:=bat_args -line-range\\=:=bat_args2 \
+  l:=bat_args -language:=bat_args -language\\=:=bat_args2 \
+  -show-all=bat_args \
+  d:=bat_args -diff=bat_args \
+  \
+  E:=rg_args -encoding:=rg_args -encoding\\=:=rg_args2 \
+  -no-encoding=rg_args \
+  g:=rg_args -glob:=rg_args -glob\\=:=rg_args2 \
+  m:=rg_args -max-count:=rg_args -max-count\\=:=rg_args2 \
+  t:=rg_args -type:=rg_args -type\\=:=rg_args2 \
+  T:=rg_args -type-not:=rg_args -type-not\\=:=rg_args2 \
+  \
+  -dfa-size-limit:=rg_args -dfa-size-limit\\=:=rg_args2 \
+  -engine:=rg_args -engine\\=:=rg_args2 \
+  -iglob:=rg_args -iglob\\=:=rg_args2 \
+  -max-depth:=rg_args -max-depth\\=:=rg_args2 \
+  -max-filesize:=rg_args -max-filesize\\=:=rg_args2 \
+  -regex-size-limit:=rg_args -regex-size-limit\\=:=rg_args2 \
+  -ignore-file:=rg_args -ignore-file\\=:=rg_args2 \
+  -sort:=rg_args -sort\\=:=rg_args2 \
+  -sortr:=rg_args -sortr\\=:=rg_args2 \
+  -type-add:=rg_args -type-add\\=:=rg_args2 \
+  -type-clear:=rg_args -type-clear\\=:=rg_args2 \
+  \
+  F=rg_args -fixed-strings=rg_args \
+  -no-fixed-strings=rg_args \
+  s=rg_args -case-sensitive=rg_args \
+  L=rg_args -follow=rg_args \
+  -no-follow=rg_args \
+  i=rg_args -ignore-case=rg_args \
+  v=rg_args -invert-match=rg_args \
+  x=rg_args -line-regexp=rg_args \
+  U=rg_args -multiline=rg_args \
+  -no-multiline=rg_args \
+  P=rg_args -pcre2=rg_args \
+  -no-pcre2-unicode=rg_args \
+  -no-pcre2=rg_args \
+  S=rg_args -smart-case=rg_args \
+  a=rg_args -text=rg_args \
+  -no-text=rg_args \
+  u=rg_args -unrestricted=rg_args \
+  w=rg_args -word-regexp=rg_args \
+  \
+  -no-config=rg_args \
+  -crlf=rg_args \
+  -no-crlf=rg_args \
+  -multiline-dotall=rg_args \
+  -no-multiline-dotall=rg_args \
+  -no-unicode=rg_args \
+  -unicode=rg_args \
+  -binary=rg_args \
+  -no-binary=rg_args \
+  -no-ignore=rg_args \
+  -ignore=rg_args \
+  -no-ignore-dot=rg_args \
+  -ignore-dot=rg_args \
+  -no-ignore-exclude=rg_args \
+  -ignore-exclude=rg_args \
+  -no-ignore-files=rg_args \
+  -ignore-files=rg_args \
+  -no-ignore-global=rg_args \
+  -ignore-global=rg_args \
+  -no-ignore-messages=rg_args \
+  -ignore-messages=rg_args \
+  -no-ignore-parent=rg_args \
+  -ignore-parent=rg_args \
+  -no-ignore-vcs=rg_args \
+  -ignore-vcs=rg_args \
+  -no-require-git=rg_args \
+  -require-git=rg_args \
+  -no-context-separator=rg_args \
+  -glob-case-insensitive=rg_args \
+  -no-glob-case-insensitive=rg_args \
+  -ignore-file-case-insensitive=rg_args \
+  -no-ignore-file-case-insensitive=rg_args \
+  -mmap=rg_args \
+  -no-mmap=rg_args \
+  -messages=rg_args \
+  -no-messages=rg_args \
+  -one-file-system=rg_args \
+  -no-one-file-system=rg_args
+
+# (--name= value) -> (--name=value)
+for ((i=1,ie=$#bat_args2; i < ie; i+=2)) ; do
+  bat_args+=($bat_args2[$i]$bat_args2[(($i+1))])
+done
+for ((i=1,ie=$#rg_args2; i < ie; i+=2)) ; do
+  rg_args+=($rg_args2[$i]$rg_args2[(($i+1))])
+done
+# (--name= value) -> (--name value)
+for ((i=1,ie=$#batrg_args2; i < ie; i+=2)) ; do
+  batrg_args+=(${batrg_args2[$i]:0:-1} $batrg_args2[(($i+1))])
+done
+
+help()
+{
+<<EOF
+batrg 1.0.0
+Jonathan Poelen <jonathan.poelen@gmail.com>
+
+Search and highlight files using ripgrep (rg) and bat.
+
+USAGE:
+    batrg [OPTIONS] PATTERN [PATH ...]
+    batrg [OPTIONS] [-e PATTERN ...] [-f PATTERNFILE ...] [PATH ...]
+    command | batrg [OPTIONS] PATTERN
+
+PATTERN:
+    See rg
+
+PATH:
+    See rg and bat
+
+OPTIONS:
+    See rg and bat
+
+    --snip, --no-snip
+        Show the snip decoration (see bat --style=...).
+        This is automatically disabled when --context=0 (see bat).
+
+    --highlight, --no-highlight
+        Highlight matching lines.
+        This is automatically disabled when --context=0 (see bat).
+
+    --file-separator=<separator>
+        Character used by the separation line between 2 files, or string sepa-
+        rator
+
+    --file-separator-wrap, --no-file-separator-wrap
+        If a match is found, appends the separator line above  the  first file
+        and below the last file.
+
+    --paging=<when>
+        Specify when to use the pager. To control which pager is used, set the
+        PAGER or BAT_PAGER environment variables (the latter takes precedence)
+        or use the '--pager' option. To  disable  the  pager  permanently, set
+        '--paging=never'.
+
+        Possible values: *auto*, never, always, one-by-one.
+
+    --bat-engine=<command>
+        Specify command for bat. By default use BATRG_BAT environment variables or bat.
+
+    --rg-engine=<command>
+        Specify command for rg. By default use BATRG_RG environment variables or rg.
+EOF
+}
+
+typeset -i \
+  ctx_before=2 \
+  ctx_after=2 \
+  highlight=2 \
+  snip=2 \
+  style=0 \
+  color=0 \
+  positional_pattern=1 \
+  file_separator_wrap=0
+terminal_width=
+paging=auto
+pager=${BAT_PAGER:-${PAGER:-less}}
+file_separator=─
+bat_engine=${BATRG_BAT:-bat}
+rg_engine=${BATRG_RG:-rg}
+
+for ((i=1,ie=$#batrg_args; i <= ie; ++i)) ; do
+  case $batrg_args[$i] in
+  -A | --after-context)  ((++i)); ctx_after=$batrg_args[$i] ;;
+  -B | --before-context) ((++i)); ctx_before=$batrg_args[$i] ;;
+  -C | --context)
+    ((++i))
+    ctx_before=$batrg_args[$i]
+    ctx_after=$ctx_before
+    ;;
+  --bat-engine) ((++i)); bat_engine=$batrg_args[$i] ;;
+  --rg-engine) ((++i)); rg_engine=$batrg_args[$i] ;;
+  --snip) snip=1 ;;
+  --no-snip) snip=0 ;;
+  --highlight) highlight=1 ;;
+  --no-highlight) highlight=0 ;;
+  --file-separator-wrap) file_separator_wrap=1 ;;
+  --no-file-separator-wrap) file_separator_wrap=0 ;;
+  --paging)
+    ((++i))
+    paging=$batrg_args[$i]
+    case $paging in
+      auto | always | never | one-by-one) ;;
+      *) echo -E "$0: error: '$paging' isn't a valid value for '--paging <when>'" >&2
+         exit 1
+         ;;
+    esac
+    ;;
+  --pager)
+    ((++i))
+    pager=$batrg_args[$i]
+    bat_args+=(--pager=$pager)
+    ;;
+  --color)
+    ((++i))
+    color=1
+    bat_args+=(--color=$batrg_args[$i])
+    ;;
+  --style)
+    ((++i))
+    style=1
+    bat_args+=(--style=$batrg_args[$i])
+    ;;
+  --terminal-width)
+    ((++i))
+    terminal_width=$batrg_args[$i]
+    ;;
+  --file-separator)
+    ((++i))
+    file_separator=$batrg_args[$i]
+    ;;
+  -p | --plain | -n | --number)
+    style=1
+    bat_args+=($batrg_args[$i])
+    ;;
+  -f | --file | -e | --regexp)
+    ((++i))
+    rg_args+=($batrg_args[$i])
+    positional_pattern=0
+    ;;
+  -h | --help) help; exit ;;
+  esac
+done
+
+if [ $positional_pattern -eq 1 ] && [ $# -eq 0 ]; then
+  help
+  exit 2
+fi
+
+if [[ -n $terminal_width ]] || [[ -n $COLUMNS ]]; then
+  case $terminal_width in
+    -* | +*) ((terminal_width+=$COLUMNS)) ;;
+    *) ((terminal_width=$COLUMNS)) ;;
+  esac
+  bat_args+=(--terminal-width=$terminal_width)
+else
+  terminal_width=
+fi
+
+if [ $#file_separator -eq 1 ]; then
+  if [[ -n $terminal_width ]]; then
+    file_separator=${${(l:$terminal_width:: :)''}// /"$file_separator"}$'\n'
+  else
+    file_separator=
+  fi
+fi
+
+if [ $style -eq 0 ] && [ -z $BAT_STYLE ]; then
+  if [ $snip -eq 2 ] && [ $ctx_after -eq 0 ] && [ $ctx_before -eq 0 ]; then
+    snip=0
+  fi
+
+  if [ $snip -eq 0 ]; then
+    bat_args+=(--style=numbers,header)
+  else
+    bat_args+=(--style=numbers,header,snip)
+  fi
+fi
+
+if [ $highlight -eq 2 ]; then
+  if [ $ctx_after -eq 0 ] && [ $ctx_before -eq 0 ]; then
+    highlight=0
+  else
+    highlight=1
+  fi
+fi
+
+
+temp_files=()
+remove_temps()
+{
+  if [ $#temp_files -ne 0 ]; then
+    rm -- $temp_files
+  fi
+}
+
+trap 'remove_temps' EXIT
+
+BATRG_PREFIX=${TMPDIR:-/tmp}/batrg.$$.
+typeset -i has_sep=0 nb_files=0 file_index=1
+
+if [[ $@[$i] = '--' ]] ; then
+  has_sep=1
+  file_index=2
+  rg_args+=(--)
+fi
+
+if [ $positional_pattern -eq 1 ]; then
+  rg_args+=($@[$file_index])
+  ((++file_index))
+fi
+files=($@[$file_index,-1])
+
+# write pipes to temporary files
+for ((i=1,ie=$#files; i <= $ie; ++i)) ; do
+  # '-' is stdin
+  if [[ $files[$i] = '-' ]] || [[ -p $files[$i] ]]; then
+    tmp=$BATRG_PREFIX$i.${files[$i]:t}
+    temp_files+=($tmp)
+    if [[ $files[$i] = '-' ]]; then
+      <&0 >$tmp
+    else
+      <$files[$i] >$tmp
+    fi
+    files[$i]=$tmp
+  elif [[ $files[$i] = '--' ]] && [ $has_sep -eq 0 ]; then
+    ((--nb_files))
+    has_sep=1
+  fi
+  ((++nb_files))
+done
+
+if [ $nb_files -eq 0 ] && [ ! -t 0 ]; then
+  tmp=${BATRG_PREFIX}stdin
+  temp_files+=($tmp)
+  files+=($tmp)
+  nb_files=1
+  <&0 >$tmp
+fi
+
+
+typeset -i main_status=0
+main()
+{
+  setopt pipefail
+  $=rg_engine -nHo --heading $rg_args $files | {
+    typeset -i prev_line found=$file_separator_wrap
+    filename=
+
+    init_ctx_file()
+    {
+      prev_line=-1
+      first_line=0
+      curr_bat_args=()
+    }
+
+    run_bat()
+    {
+      [ $found -ne 0 ] && echo -nE $file_separator
+      first_line=$(($first_line-$ctx_before))
+      [[ $first_line -gt 0 ]] || first_line=
+      curr_bat_args[1]='--line-range='$first_line':'$(($prev_line+$ctx_after))
+      $=bat_engine $bat_args $curr_bat_args -- $filename
+      found=2
+    }
+
+    # output format:
+    # {filename}
+    # {line}:...
+    # {line}:...
+    #
+    # {filename}
+    # {line}:...
+    # {line}:...
+
+    init_ctx_file
+
+    while read -r filename_ ; do
+      filename=$filename_
+      while IFS=: read -r line match; do
+        if [ -z $line ]; then
+          run_bat
+          init_ctx_file
+          break
+        fi
+
+        if [ $(($prev_line+1)) -ne $line ]; then
+          first_line=$(($first_line-$ctx_before))
+          [[ $first_line -gt 0 ]] || first_line=
+          curr_bat_args+=( '--line-range='$first_line':'$(($prev_line+$ctx_after)) )
+          first_line=$line
+        fi
+
+        if [ $highlight -eq 1 ]; then
+          curr_bat_args+=(--highlight-line=$line)
+        fi
+
+        prev_line=$line
+      done
+    done
+
+    if [ $prev_line -ne -1 ]; then
+      run_bat
+      [ $file_separator_wrap -eq 1 ] && echo -nE $file_separator
+    fi
+  }
+
+  main_status=$pipestatus[1]
+}
+
+main_with_pager()
+{
+  if [ -t 1 ]; then
+    if [ $color -eq 0 ]; then
+      bat_args+=(--color=always)
+    fi
+    bat_args+=(--paging=never)
+    main | $=pager
+  else
+    main
+  fi
+}
+
+case $paging in
+  auto)
+    if [ $nb_files -eq 1 ]; then
+      main
+    else
+      if [[ ${pager/ */} = 'less' ]]; then
+        pager+=' --quit-if-one-screen'
+      fi
+      main_with_pager
+    fi
+    ;;
+  always)
+    if [ $nb_files -eq 1 ]; then
+      bat_args+=(--paging=always)
+      main
+    else
+      main_with_pager
+    fi
+    ;;
+  never)
+    bat_args+=(--paging=never)
+    main
+    ;;
+  one-by-one)
+    bat_args+=(--paging=always)
+    file_separator=
+    main
+    ;;
+esac
+
+exit $main_status
+
+# kate: syntax Zsh;
+# vim: ft=zsh

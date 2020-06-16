@@ -1,0 +1,363 @@
+#compdef batrg
+
+##
+# zsh completion function for batrg
+#
+# Based on rg completion, itself originally based on code from the zsh-users project
+# — see copyright notice below.
+#
+
+_batrg() {
+  local curcontext=$curcontext no='!' descr ret=1
+  local -a context line state state_descr args tmp suf
+  local -A opt_args
+
+  # ripgrep has many options which negate the effect of a more common one — for
+  # example, `--no-column` to negate `--column`, and `--messages` to negate
+  # `--no-messages`. There are so many of these, and they're so infrequently
+  # used, that some users will probably find it irritating if they're completed
+  # indiscriminately, so let's not do that unless either the current prefix
+  # matches one of those negation options or the user has the `complete-all`
+  # style set. Note that this prefix check has to be updated manually to account
+  # for all of the potential negation options listed below!
+  if
+    # We also want to list all of these options during testing
+    [[ $_RG_COMPLETE_LIST_ARGS == (1|t*|y*) ]] ||
+    # (--[imnp]* => --ignore*, --messages, --no-*, --pcre2-unicode)
+    [[ $PREFIX$SUFFIX == --[imnp]* ]] ||
+    zstyle -t ":complete:$curcontext:*" complete-all
+  then
+    no=
+  fi
+
+  # We make heavy use of argument groups here to prevent the option specs from
+  # growing unwieldy. These aren't supported in zsh <5.4, though, so we'll strip
+  # them out below if necessary. This makes the exclusions inaccurate on those
+  # older versions, but oh well — it's not that big a deal
+  args=(
+    + '(exclusive)' # Misc. fully exclusive options
+    '(: * -)'{-h,--help}'[display help information]'
+
+    + '(case)' # Case-sensitivity options
+    {-i,--ignore-case}'[search case-insensitively]'
+    {-s,--case-sensitive}'[search case-sensitively]'
+    {-S,--smart-case}'[search case-insensitively if pattern is all lowercase]'
+
+    + '(context-a)' # Context (after) options
+    '(context-c)'{-A+,--after-context=}'[specify lines to show after each match]:number of lines'
+
+    + '(context-b)' # Context (before) options
+    '(context-c)'{-B+,--before-context=}'[specify lines to show before each match]:number of lines'
+
+    + '(context-c)' # Context (combined) options
+    '(context-a context-b)'{-C+,--context=}'[specify lines to show before and after each match]:number of lines'
+
+    + '(engine)' # Engine choice options
+    '--engine=[select which regex engine to use]:when:((
+      default\:"use default engine"
+      pcre2\:"identical to --pcre2"
+      auto\:"identical to --auto-hybrid-regex"
+    ))'
+
+    + file # File-input options
+    '(1)*'{-f+,--file=}'[specify file containing patterns to search for]: :_files'
+
+    + '(file-system)' # File system options
+    "--one-file-system[don't descend into directories on other file systems]"
+    $no'--no-one-file-system[descend into directories on other file systems]'
+
+    + '(fixed)' # Fixed-string options
+    {-F,--fixed-strings}'[treat pattern as literal string instead of regular expression]'
+    $no"--no-fixed-strings[don't treat pattern as literal string]"
+
+    + '(follow)' # Symlink-following options
+    {-L,--follow}'[follow symlinks]'
+    $no"--no-follow[don't follow symlinks]"
+
+    + glob # File-glob options
+    '*'{-g+,--glob=}'[include/exclude files matching specified glob]:glob'
+    '*--iglob=[include/exclude files matching specified case-insensitive glob]:glob'
+
+    + '(glob-case-insensitive)' # File-glob case sensitivity options
+    '--glob-case-insensitive[treat -g/--glob patterns case insensitively]'
+    $no'--no-glob-case-insensitive[treat -g/--glob patterns case sensitively]'
+
+    + '(hidden)' # Hidden-file options
+    '--hidden[search hidden files and directories]'
+    $no"--no-hidden[don't search hidden files and directories]"
+
+    + '(ignore)' # Ignore-file options
+    "(--no-ignore-global --no-ignore-parent --no-ignore-vcs --no-ignore-dot)--no-ignore[don't respect ignore files]"
+    $no'(--ignore-global --ignore-parent --ignore-vcs --ignore-dot)--ignore[respect ignore files]'
+
+    + '(ignore-file-case-insensitive)' # Ignore-file case sensitivity options
+    '--ignore-file-case-insensitive[process ignore files case insensitively]'
+    $no'--no-ignore-file-case-insensitive[process ignore files case sensitively]'
+
+    + '(ignore-exclude)' # Local exclude (ignore)-file options
+    "--no-ignore-exclude[don't respect local exclude (ignore) files]"
+    $no'--ignore-exclude[respect local exclude (ignore) files]'
+
+    + '(ignore-global)' # Global ignore-file options
+    "--no-ignore-global[don't respect global ignore files]"
+    $no'--ignore-global[respect global ignore files]'
+
+    + '(ignore-parent)' # Parent ignore-file options
+    "--no-ignore-parent[don't respect ignore files in parent directories]"
+    $no'--ignore-parent[respect ignore files in parent directories]'
+
+    + '(ignore-vcs)' # VCS ignore-file options
+    "--no-ignore-vcs[don't respect version control ignore files]"
+    $no'--ignore-vcs[respect version control ignore files]'
+
+    + '(require-git)' # git specific settings
+    "--no-require-git[don't require git repository to respect gitignore rules]"
+    $no'--require-git[require git repository to respect gitignore rules]'
+
+    + '(ignore-dot)' # .ignore options
+    "--no-ignore-dot[don't respect .ignore files]"
+    $no'--ignore-dot[respect .ignore files]'
+
+    + '(ignore-files)' # custom global ignore file options
+    "--no-ignore-files[don't respect --ignore-file flags]"
+    $no'--ignore-files[respect --ignore-file files]'
+
+    + '(line-terminator)' # Line-terminator options
+    '--crlf[use CRLF as line terminator]'
+    $no"--no-crlf[don't use CRLF as line terminator]"
+    '(text)--null-data[use NUL as line terminator]'
+
+    + '(max-depth)' # Directory-depth options
+    '--max-depth=[specify max number of directories to descend]:number of directories'
+    '!--maxdepth=:number of directories'
+
+    + '(messages)' # Error-message options
+    '(--no-ignore-messages)--no-messages[suppress some error messages]'
+    $no"--messages[don't suppress error messages affected by --no-messages]"
+
+    + '(messages-ignore)' # Ignore-error message options
+    "--no-ignore-messages[don't show ignore-file parse error messages]"
+    $no'--ignore-messages[show ignore-file parse error messages]'
+
+    + '(mmap)' # mmap options
+    '--mmap[search using memory maps when possible]'
+    "--no-mmap[don't search using memory maps]"
+
+    + '(multiline)' # Multiline options
+    {-U,--multiline}'[permit matching across multiple lines]'
+    $no'(multiline-dotall)--no-multiline[restrict matches to at most one line each]'
+
+    + '(multiline-dotall)' # Multiline DOTALL options
+    '(--no-multiline)--multiline-dotall[allow "." to match newline (with -U)]'
+    $no"(--no-multiline)--no-multiline-dotall[don't allow \".\" to match newline (with -U)]"
+
+    + '(only)' # Only-match options
+    {-o,--only-matching}'[show only matching part of each line]'
+
+    + '(passthru)' # Pass-through options
+    '(--vimgrep)--passthru[show both matching and non-matching lines]'
+    '!(--vimgrep)--passthrough'
+
+    + '(pcre2)' # PCRE2 options
+    {-P,--pcre2}'[enable matching with PCRE2]'
+    $no'(pcre2-unicode)--no-pcre2[disable matching with PCRE2]'
+
+    + '(pcre2-unicode)' # PCRE2 Unicode options
+    $no'(--no-pcre2 --no-pcre2-unicode)--pcre2-unicode[enable PCRE2 Unicode mode (with -P)]'
+    '(--no-pcre2 --pcre2-unicode)--no-pcre2-unicode[disable PCRE2 Unicode mode (with -P)]'
+
+    + regexp # Explicit pattern options
+    '(1 file)*'{-e+,--regexp=}'[specify pattern]:pattern'
+
+    + '(sort)' # File-sorting options
+    '(threads)--sort=[sort results in ascending order (disables parallelism)]:sort method:((
+      none\:"no sorting"
+      path\:"sort by file path"
+      modified\:"sort by last modified time"
+      accessed\:"sort by last accessed time"
+      created\:"sort by creation time"
+    ))'
+    '(threads)--sortr=[sort results in descending order (disables parallelism)]:sort method:((
+      none\:"no sorting"
+      path\:"sort by file path"
+      modified\:"sort by last modified time"
+      accessed\:"sort by last accessed time"
+      created\:"sort by creation time"
+    ))'
+    '!(threads)--sort-files[sort results by file path (disables parallelism)]'
+
+    + '(text)' # Binary-search options
+    {-a,--text}'[search binary files as if they were text]'
+    "--binary[search binary files, don't print binary data]"
+    $no"--no-binary[don't search binary files]"
+    $no"(--null-data)--no-text[don't search binary files as if they were text]"
+
+    + '(threads)' # Thread-count options
+    '(sort)'{-j+,--threads=}'[specify approximate number of threads to use]:number of threads'
+
+    + type # Type options
+    '*'{-t+,--type=}'[only search files matching specified type]: :_batrg_types'
+    '*--type-add=[add new glob for specified file type]: :->typespec'
+    '*--type-clear=[clear globs previously defined for specified file type]: :_batrg_types'
+    # This should actually be exclusive with everything but other type options
+    '(: *)--type-list[show all supported file types and their associated globs]'
+    '*'{-T+,--type-not=}"[don't search files matching specified file type]: :_batrg_types"
+
+    + '(word-line)' # Whole-word/line match options
+    {-w,--word-regexp}'[only show matches surrounded by word boundaries]'
+    {-x,--line-regexp}'[only show matches surrounded by line boundaries]'
+
+    + '(unicode)' # Unicode options
+    $no'--unicode[enable Unicode mode]'
+    '--no-unicode[disable Unicode mode]'
+
+    + style # colors and styles
+    '--color=[specify when to use colors in output]:when:((
+      auto\:"use colors or not based on stdout, TERM, etc."
+      never\:"never use colors"
+      always\:"always use colors"
+    ))'
+    '(-p --plain)'{-p,--plain}'[show plain style, alias for "--style=plain"]'
+    '(-n --number)'{-n,--number}'[show line numbers, alias for "--style=numbers"]'
+    '--style=[comma-separated list of style]:styles:_values -s ,
+      style auto full plain changes header grid numbers snip'
+    '--italic-text=[Specify when to use ANSI sequences for italic]:when:((always never))'
+    '--snip[enable snip style]'
+    '--no-snip[disable snip style]'
+    '--file-separator=[character used by the separation line between 2 files]:char'
+    '--file-separator-wrap[appends separator above the first file and below the last file]'
+    '--no-file-separator-wrap[disable --file-separator-wrap]'
+    '--decorations=[Specify when to use the decorations that have been specified via "--style"]:when:((
+      auto\:"use decoration or not based on interactive terminal detection"
+      always\:"always use decorations"
+      never\:"never use decorations"
+    ))'
+    '--terminal-width=[specify width of the terminal]:width'
+    '--wrap=[specify the text-wrapping mode]:mode:((
+      auto\:""
+      never\:""
+      character\:""
+    ))'
+    '--tabs=[set the tab width]:width'
+    '--show-all[show non-printable characters like space, tab or newline]'
+
+    + highlight
+    '--highlight[enable highlight matching lines]'
+    '--no-highlight[disable highlight matching lines]'
+    {-H+,--highlight-line=}'[highlight the specified line ranges]:range'
+    {-l+,--language=}'[set the langage for syntax highlighting]:language'
+    {-m+,--map-syntax=}'[map a glob pattern to an existing syntax name]:glob_syntax'
+    '--theme=[set the theme for syntax highlighting]:theme'
+
+    + misc # Other options — no need to separate these at the moment
+    '--dfa-size-limit=[specify upper size limit of generated DFA]:DFA size (bytes)'
+    "(1 stats)--files[show each file that would be searched (but don't search)]"
+    '*--ignore-file=[specify additional ignore file]:ignore file:_files'
+    '(-v --invert-match)'{-v,--invert-match}'[invert matching]'
+    '(-m --max-count)'{-m+,--max-count=}'[specify max number of matches per file]:number of matches'
+    '--max-filesize=[specify size above which files should be ignored]:file size (bytes)'
+    "--no-config[don't load configuration files]"
+    '--path-separator=[specify path separator to use when printing file names]:separator'
+    '--regex-size-limit=[specify upper size limit of compiled regex]:regex size (bytes)'
+    '-u,--unbufferd=[specify upper size limit of compiled regex]:regex size (bytes)'
+    '*'{-u,--unrestricted}'[reduce level of "smart" searching]'
+    {-r+,--line-range=}'[Only print the specified range of lines for each file]:range'
+    {-d,--diff}'[Only show lines that have been added/removed/modified with respect to the Git index]'
+    '--diff-context=[Include N lines of context around added/removed/modified lines when using "--diff"]:N'
+
+    + operand # Operands
+    '(--files --type-list file regexp)1: :_guard "^-*" pattern'
+    '(--type-list)*: :_files'
+
+    + paging # Pagings
+    '--paging=[specify when to use the pager]:when:((
+      auto\:"use pager or not based on stdout, $LINES, etc"
+      never\:"never use pager"
+      never\:"always use pager"
+      one-by-one\:"always use pager file by file"
+    ))'
+    '--pager[specify pager]:command'
+  )
+
+  # This is used with test-complete to verify that there are no options
+  # listed in the help output that aren't also defined here
+  [[ $_RG_COMPLETE_LIST_ARGS == (1|t*|y*) ]] && {
+    print -rl - $args
+    return 0
+  }
+
+  # Strip out argument groups where unsupported (see above)
+  [[ $ZSH_VERSION == (4|5.<0-3>)(.*)# ]] &&
+  args=( ${(@)args:#(#i)(+|[a-z0-9][a-z0-9_-]#|\([a-z0-9][a-z0-9_-]#\))} )
+
+  _arguments -C -s -S : $args && ret=0
+
+  case $state in
+    typespec)
+      if compset -P '[^:]##:include:'; then
+        _sequence -s , _batrg_types && ret=0
+      # @todo This bit in particular could be better, but it's a little
+      # complex, and attempting to solve it seems to run us up against a crash
+      # bug — zsh # 40362
+      elif compset -P '[^:]##:'; then
+        _message 'glob or include directive' && ret=1
+      elif [[ ! -prefix *:* ]]; then
+        _batrg_types -qS : && ret=0
+      fi
+      ;;
+  esac
+
+  return ret
+}
+
+# Complete file types
+_batrg_types() {
+  local -a expl
+  local -aU _types
+
+  _types=( ${(@)${(f)"$( _call_program types rg --type-list )"}%%:*} )
+
+  _wanted types expl 'file type' compadd -a "$@" - _types
+}
+
+_batrg "$@"
+
+# ------------------------------------------------------------------------------
+# Copyright (c) 2011 Github zsh-users - http://github.com/zsh-users
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the zsh-users nor the
+#       names of its contributors may be used to endorse or promote products
+#       derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL ZSH-USERS BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# ------------------------------------------------------------------------------
+# Description
+# -----------
+#
+#  Completion script for ripgrep
+#
+# ------------------------------------------------------------------------------
+# Authors
+# -------
+#
+#  * arcizan <ghostrevery@gmail.com>
+#  * MaskRay <i@maskray.me>
+#
+# ------------------------------------------------------------------------------
