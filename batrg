@@ -264,7 +264,7 @@ for ((i=1,ie=$#batrg_args; i <= ie; ++i)) ; do
   esac
 done
 
-if [ $positional_pattern -eq 1 ] && [ $# -eq 0 ]; then
+if [[ $positional_pattern -eq 1 ]] && [[ $# -eq 0 ]]; then
   help
   exit 2
 fi
@@ -279,7 +279,7 @@ else
   terminal_width=
 fi
 
-if [ $#file_separator -eq 1 ]; then
+if [[ $#file_separator -eq 1 ]]; then
   if [[ -n $terminal_width ]]; then
     file_separator=${${(l:$terminal_width:: :)''}// /"$file_separator"}$'\n'
   else
@@ -287,17 +287,17 @@ if [ $#file_separator -eq 1 ]; then
   fi
 fi
 
-if [ $style -eq 0 ] && [ -z $BAT_STYLE ]; then
-  if [ $snip -eq 2 ]; then
-    if [ $ctx_after -eq 0 ] && [ $ctx_before -eq 0 ]; then
+if [[ $style -eq 0 ]] && [[ -z $BAT_STYLE ]]; then
+  if [[ $snip -eq 2 ]]; then
+    if [[ $ctx_after -eq 0 ]] && [[ $ctx_before -eq 0 ]]; then
       snip=0
     else
       # --style=snip since bat-0.12
       bat_version=$($=bat_engine --version)
       setopt extendedglob
       if [[ $bat_version = 'bat '(#b)(<0-9>##).(<0-9>##)* ]] &&
-        [ ${bat_version[$mbegin[1],$mend[1]]} = 0 ] &&
-        [ ${bat_version[$mbegin[2],$mend[2]]} -lt 12 ] ;
+        [[ ${bat_version[$mbegin[1],$mend[1]]} = 0 ]] &&
+        [[ ${bat_version[$mbegin[2],$mend[2]]} -lt 12 ]] ;
       then
         snip=0
       fi
@@ -305,15 +305,15 @@ if [ $style -eq 0 ] && [ -z $BAT_STYLE ]; then
     fi
   fi
 
-  if [ $snip -eq 0 ]; then
+  if [[ $snip -eq 0 ]]; then
     bat_args+=(--style=numbers,header)
   else
     bat_args+=(--style=numbers,header,snip)
   fi
 fi
 
-if [ $highlight -eq 2 ]; then
-  if [ $ctx_after -eq 0 ] && [ $ctx_before -eq 0 ]; then
+if [[ $highlight -eq 2 ]]; then
+  if [[ $ctx_after -eq 0 ]] && [[ $ctx_before -eq 0 ]]; then
     highlight=0
   else
     highlight=1
@@ -324,7 +324,7 @@ fi
 temp_files=()
 remove_temps()
 {
-  if [ $#temp_files -ne 0 ]; then
+  if [[ $#temp_files -ne 0 ]]; then
     rm -- $temp_files
   fi
 }
@@ -340,7 +340,7 @@ if [[ $@[$i] = '--' ]] ; then
   rg_args+=(--)
 fi
 
-if [ $positional_pattern -eq 1 ]; then
+if [[ $positional_pattern -eq 1 ]]; then
   rg_args+=($@[$file_index])
   ((++file_index))
 fi
@@ -358,14 +358,14 @@ for ((i=1,ie=$#files; i <= $ie; ++i)) ; do
       <$files[$i] >$tmp
     fi
     files[$i]=$tmp
-  elif [[ $files[$i] = '--' ]] && [ $has_sep -eq 0 ]; then
+  elif [[ $files[$i] = '--' ]] && [[ $has_sep -eq 0 ]]; then
     ((--nb_files))
     has_sep=1
   fi
   ((++nb_files))
 done
 
-if [ $nb_files -eq 0 ] && [ ! -t 0 ]; then
+if [[ $nb_files -eq 0 ]] && [[ ! -t 0 ]]; then
   tmp=${BATRG_PREFIX}stdin
   temp_files+=($tmp)
   files+=($tmp)
@@ -391,7 +391,7 @@ main()
 
     run_bat()
     {
-      [ $found -ne 0 ] && echo -nE $file_separator
+      [[ $found -ne 0 ]] && echo -nE $file_separator
       first_line=$(($first_line-$ctx_before))
       [[ $first_line -gt 0 ]] || first_line=
       curr_bat_args[1]='--line-range='$first_line':'$(($prev_line+$ctx_after))
@@ -413,20 +413,20 @@ main()
     while read -r filename_ ; do
       filename=$filename_
       while IFS=: read -r line match; do
-        if [ -z $line ]; then
+        if [[ -z $line ]]; then
           run_bat
           init_ctx_file
           break
         fi
 
-        if [ $(($prev_line+1)) -ne $line ]; then
+        if [[ $(($prev_line+1)) -ne $line ]]; then
           first_line=$(($first_line-$ctx_before))
           [[ $first_line -gt 0 ]] || first_line=
           curr_bat_args+=( '--line-range='$first_line':'$(($prev_line+$ctx_after)) )
           first_line=$line
         fi
 
-        if [ $highlight -eq 1 ]; then
+        if [[ $highlight -eq 1 ]]; then
           curr_bat_args+=(--highlight-line=$line)
         fi
 
@@ -434,9 +434,9 @@ main()
       done
     done
 
-    if [ $prev_line -ne -1 ]; then
+    if [[ $prev_line -ne -1 ]]; then
       run_bat
-      [ $file_separator_wrap -eq 1 ] && echo -nE $file_separator
+      [[ $file_separator_wrap -eq 1 ]] && echo -nE $file_separator
     fi
   }
 
@@ -445,8 +445,8 @@ main()
 
 main_with_pager()
 {
-  if [ -t 1 ]; then
-    if [ $color -eq 0 ]; then
+  if [[ -t 1 ]]; then
+    if [[ $color -eq 0 ]]; then
       bat_args+=(--color=always)
     fi
     bat_args+=(--paging=never)
@@ -458,7 +458,7 @@ main_with_pager()
 
 case $paging in
   auto)
-    if [ $nb_files -eq 1 ]; then
+    if [[ $nb_files -eq 1 ]]; then
       main
     else
       if [[ ${pager/ */} = 'less' ]]; then
@@ -468,7 +468,7 @@ case $paging in
     fi
     ;;
   always)
-    if [ $nb_files -eq 1 ]; then
+    if [[ $nb_files -eq 1 ]]; then
       bat_args+=(--paging=always)
       main
     else
