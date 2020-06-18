@@ -66,6 +66,13 @@ See `rg`
 Another options are passed directly to `ripgrep` or `bat`.
 
 
+## Dependencies
+
+- `zsh`
+- `bat`
+- `rg`
+
+
 ## Installation
 
 Just put `batrg` in a `PATH` folder and `completion/_batrg` in a completion folder.
