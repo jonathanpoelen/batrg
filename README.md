@@ -2,6 +2,8 @@
 
 Search and highlight files using ripgrep (rg) and bat.
 
+![Batrg sample](./image.png "Batrg sample")
+
 
 ## Usage
 
