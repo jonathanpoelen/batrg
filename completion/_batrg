@@ -273,7 +273,7 @@ _batrg() {
     '--paging=[specify when to use the pager]:when:((
       auto\:"use pager or not based on stdout, $LINES, etc"
       never\:"never use pager"
-      never\:"always use pager"
+      always\:"always use pager"
       one-by-one\:"always use pager file by file"
     ))'
     '--pager[specify pager]:command'
