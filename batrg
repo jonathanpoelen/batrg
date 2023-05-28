@@ -271,7 +271,7 @@ fi
 
 if [[ -n $terminal_width ]] || [[ -n $COLUMNS ]]; then
   case $terminal_width in
-    -* | +*) ((terminal_width+=$COLUMNS)) ;;
+    [-+]*) ((terminal_width+=$COLUMNS)) ;;
     *) ((terminal_width=$COLUMNS)) ;;
   esac
   bat_args+=(--terminal-width=$terminal_width)
