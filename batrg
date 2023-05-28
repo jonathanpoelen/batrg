@@ -134,7 +134,7 @@ done
 help()
 {
 <<EOF
-batrg 1.0.0
+batrg 1.1.0
 Jonathan Poelen <jonathan.poelen@gmail.com>
 
 Search and highlight files using ripgrep (rg) and bat.
@@ -371,6 +371,8 @@ if [[ $nb_files -eq 0 ]] && [[ ! -t 0 ]]; then
   files+=($tmp)
   nb_files=1
   <&0 >$tmp
+elif [[ $nb_files -eq 1 ]] && [[ -d $files ]] ; then
+  nb_files=2  # assume there is more than 1 file
 fi
 
 
