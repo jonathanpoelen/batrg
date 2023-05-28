@@ -221,7 +221,7 @@ _batrg() {
     '(-n --number)'{-n,--number}'[show line numbers, alias for "--style=numbers"]'
     '--style=[comma-separated list of style]:styles:_values -s ,
       style auto full plain changes header grid numbers snip'
-    '--italic-text=[Specify when to use ANSI sequences for italic]:when:((always never))'
+    '--italic-text=[Specify when to use ANSI sequences for italic]:when:(always never)'
     '--snip[enable snip style]'
     '--no-snip[disable snip style]'
     '--file-separator=[character used by the separation line between 2 files]:char'
@@ -233,11 +233,7 @@ _batrg() {
       never\:"never use decorations"
     ))'
     '--terminal-width=[specify width of the terminal]:width'
-    '--wrap=[specify the text-wrapping mode]:mode:((
-      auto\:""
-      never\:""
-      character\:""
-    ))'
+    '--wrap=[specify the text-wrapping mode]:mode:(auto never character)'
     '--tabs=[set the tab width]:width'
     '--show-all[show non-printable characters like space, tab or newline]'
 
